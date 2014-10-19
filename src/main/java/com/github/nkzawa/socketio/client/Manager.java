@@ -75,6 +75,7 @@ public class Manager extends Emitter {
 
     /*package*/ ReadyState readyState = null;
 
+    private boolean gotShutdown;
     private boolean _reconnection;
     private boolean skipReconnect;
     private boolean reconnecting;
@@ -303,6 +304,8 @@ public class Manager extends Emitter {
 
         this.cleanup();
 
+        this.gotShutdown = false;
+
         this.readyState = ReadyState.OPEN;
         this.emit(EVENT_OPEN);
 
@@ -434,6 +437,7 @@ public class Manager extends Emitter {
     private void onclose(String reason) {
         logger.fine("close");
         this.cleanup();
+        this.gotShutdown = true;
         this.readyState = ReadyState.CLOSED;
         this.emit(EVENT_CLOSE, reason);
 
@@ -450,7 +454,7 @@ public class Manager extends Emitter {
     }
 
     private void reconnect() {
-        if (this.reconnecting) return;
+        if (this.reconnecting || this.gotShutdown) return;
 
         final Manager self = this;
         this.attempts++;
